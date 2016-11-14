@@ -398,7 +398,10 @@ QString ProcessThread::encodeArrowNum(const QString s)
             r.append(s.mid(i,start-i-1));//U4:i=0,start=1  增加start前部分
             end = findNotNum(s,start+1);//U12F:i=0,start=1,end=3
 
-//            int l = s.mid(start,end==-1?n:end-start).toInt();
+            int line = s.mid(start,end==-1?n:end-start).toInt();//取得数字部分
+            QTableWidgetItem *item = m_table->item (line,0);//数字对应行
+            int l = item==0?0:item->text ().toInt();//行对应数字
+
             while(l--){
                 r.append(s.at(start-1));
             }
@@ -753,15 +756,21 @@ void ProcessThread::processCMD(QStringList list)
         if(delay>0&&delay<10000)
             this->msleep(delay);
     }
-    else if(list.at(0)==DIY_UP)
+    else if(list.at(0)==DIY_UP||list.at(0)==DIY_DOWN)
     {
         int row = list.at (1).toInt ();
-        QTableWidgetItem *item = m_table->item (row,0);
-        QString s1 = item->text ().toInt();
-    }
-    else if(list.at(0)==DIY_DOWN)
-    {
-        //
+        int step = list.at(2).toInt();
+        QTableWidgetItem *item = m_table->item (row,0);//数字对应行
+        if(item!=0){
+            int num = item->text ().toInt();//行对应数字
+            if(list.at(0)==DIY_UP)
+                num+=step;
+            else
+                num-=step;
+            if(num<0)
+                num = 0;
+            item->setText(QString("%1").arg(num));
+        }
     }
 }
 

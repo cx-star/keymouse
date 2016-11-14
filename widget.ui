@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>931</width>
+    <width>1101</width>
     <height>488</height>
    </rect>
   </property>
@@ -267,7 +267,7 @@
         <bool>true</bool>
        </property>
        <property name="plainText">
-        <string>说明：
+        <string> 说明：
 M#坐标#坐标#注释（鼠标单击）
 R#坐标#坐标#注释（鼠标右键）
 C#固定文本#注释
@@ -357,6 +357,13 @@ Q#自定义行号#n#（自定义减少n)</string>
        </property>
        <property name="text">
         <string>鼠标左右键切换</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>PushButton</string>
        </property>
       </widget>
      </item>
