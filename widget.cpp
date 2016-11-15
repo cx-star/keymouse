@@ -30,7 +30,9 @@
 #define ArrowTab "A"
 //延时
 #define Delay_text "T"
-//上下左右UDLR,B=ShiftTab
+//上下左右UDLR,B=ShiftTab，Z=AltTab
+#define ShiftDown s
+#define ShiftUp S
 //改变自定义文本PQ
 #define DIY_UP "P"
 #define DIY_DOWN "Q"
@@ -416,7 +418,7 @@ QString ProcessThread::encodeArrowNum(const QString s)
             break;
         }
     }
-    qDebug()<<r;
+    qDebug()<<"encodeArrowNum"<<r;
     return r;
 }
 
@@ -682,8 +684,8 @@ void ProcessThread::mouseClick(int x, int y)
 //设置剪切板 并 粘贴
 void ProcessThread::sendText(QString s)
 {
-    //m_clipboard->setText(s);改为信号槽
-    emit setClip(s);
+    QApplication::clipboard()->setText(s);//改为信号槽
+    //emit setClip(s);
     this->msleep(20);//防止复制漏掉
 	m_sendKeyMouse->sendKey (Qt::Key_Control,Qt::Key_V);
 }
@@ -731,7 +733,7 @@ void ProcessThread::processCMD(QStringList list)
         const QChar *data = s.constData();
         while(!data->isNull())
         {
-            QChar c = data->toUpper();
+            QChar c = *data/*->toUpper()*/;
             if(c==QChar('L'))
                 m_sendKeyMouse->sendKey (Qt::Key_Left);
             else if(c==QChar('R'))
@@ -746,6 +748,21 @@ void ProcessThread::processCMD(QStringList list)
             else if(c==QChar('B'))//shift_tab
             {
                 m_sendKeyMouse->sendKey (Qt::Key_Shift,Qt::Key_Tab);
+            }
+            else if(c==QChar('Z'))//alt tab
+            {
+                qDebug()<<"alt tab";
+                m_sendKeyMouse->sendKey(Qt::Key_Alt,Qt::Key_Tab);
+            }
+            else if(c==QChar('S'))//shift up
+            {
+                qDebug()<<"shift up";
+                m_sendKeyMouse->sendKey(Qt::Key_Shift,Qt::Key_Right);
+            }
+            else if(c==QChar('s'))//shift down
+            {
+                qDebug()<<"shift down";
+                m_sendKeyMouse->sendKeyDown(Qt::Key_Shift);
             }
             ++data;
         }

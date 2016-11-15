@@ -17,6 +17,9 @@ public:
     void sendKey(Qt::Key key1, Qt::Key key2);
 
 
+    void sendKeyDown(Qt::Key key1);
+    void sendKeyUp(Qt::Key key1);
+
 signals:
 
 public slots:

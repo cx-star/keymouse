@@ -40,6 +40,10 @@ quint32 MyGlobalShortCut::nativeKeycode(Qt::Key key)
 {
     switch (key)
     {
+    case Qt::Key_Shift:
+        return VK_SHIFT;
+    case Qt::Key_Alt:
+        return VK_MENU;
     case Qt::Key_Control:
         return VK_CONTROL;
     case Qt::Key_Escape:

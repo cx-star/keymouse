@@ -275,7 +275,10 @@ D#自定义行号#注释
 E#X#Y#Z#注释
 　（自定义文本X行等于Y则执行Z）
 A#方向字母#注释
-　（L左R右U上D下;T=tab;B=shift_tab。后面加n为自定义行)
+　（L左R右U上D下;T=Tab;
+    B=ShiftTab;Z=AltTab;
+    S=ShiftUp;s=ShiftDown。
+    后面加n为自定义行)
 T#延时时间#注释
 P#自定义行号#n#（自定义增加n)
 Q#自定义行号#n#（自定义减少n)</string>
