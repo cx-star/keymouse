@@ -28,6 +28,8 @@
 #define DIY_TEXT "D"
 #define EQUAL_TEXT "E"
 #define ArrowTab "A"
+#define COPY "F"
+#define PASTE "V"
 //延时
 #define Delay_text "T"
 //上下左右UDLR,B=ShiftTab，Z=AltTab
@@ -202,7 +204,7 @@ void Widget::shortcut_t_slot(QString s)//所有快捷键处理函数
 	else//ShortCut_F8<<ShortCut_F9<<ShortCut_F10<<ShortCut_F11<<ShortCut_F12)
 	{
         doCmd(false,s);//执行非Ini，快捷键为 s
-	}
+    }
 }
 
 void Widget::insertCmdModelData(QString s)//将s插入modelCmd
@@ -736,12 +738,21 @@ void ProcessThread::processCMD(QStringList list)
             QChar c = *data/*->toUpper()*/;
             if(c==QChar('L'))
                 m_sendKeyMouse->sendKey (Qt::Key_Left);
-            else if(c==QChar('R'))
-                m_sendKeyMouse->sendKey (Qt::Key_Right);
-            else if(c==QChar('U'))
-                m_sendKeyMouse->sendKey (Qt::Key_Up);
-            else if(c==QChar('D'))
-                m_sendKeyMouse->sendKey (Qt::Key_Down);
+            else if(c==QChar('R')){
+                //m_sendKeyMouse->sendKey (Qt::Key_Right);
+                keybd_event( VK_RIGHT, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_RIGHT, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+            }
+            else if(c==QChar('U')){
+                //m_sendKeyMouse->sendKey (Qt::Key_Up);
+                keybd_event( VK_UP, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_UP, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+            }
+            else if(c==QChar('D')){
+                //m_sendKeyMouse->sendKey (Qt::Key_Down);
+                keybd_event( VK_DOWN, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_DOWN, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+            }
             else if(c==QChar('T')){
                 m_sendKeyMouse->sendKey (Qt::Key_Tab);
             }
@@ -752,17 +763,44 @@ void ProcessThread::processCMD(QStringList list)
             else if(c==QChar('Z'))//alt tab
             {
                 qDebug()<<"alt tab";
-                m_sendKeyMouse->sendKey(Qt::Key_Alt,Qt::Key_Tab);
+                //m_sendKeyMouse->sendKey(Qt::Key_Alt,Qt::Key_Tab);
+                keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
             }
+            else if(c==QChar('F'))//
+            {
+                keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( 'C', 0,0,0 );
+                keybd_event( 'C', 0,0|KEYEVENTF_KEYUP,0 );
+                keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+            }
+            else if(c==QChar('V'))
+            {
+                keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( 'V', 0,0,0 );
+                keybd_event( 'V', 0,0|KEYEVENTF_KEYUP,0 );
+                keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+            }/*
+            else if(c==QChar('X'))//shift up
+            {
+                keybd_event( VK_SHIFT, 0x45,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0 );
+            }
+            else if(c==QChar('x'))//shift down
+            {
+                keybd_event( VK_SHIFT, 0x45,KEYEVENTF_EXTENDEDKEY | 0,0 );
+            }*/
             else if(c==QChar('S'))//shift up
             {
-                qDebug()<<"shift up";
-                m_sendKeyMouse->sendKey(Qt::Key_Shift,Qt::Key_Right);
+                //m_sendKeyMouse->sendKeyUp(Qt::Key_Shift);
+                keybd_event( VK_SHIFT, 0,KEYEVENTF_KEYUP,0 );
+
             }
             else if(c==QChar('s'))//shift down
             {
-                qDebug()<<"shift down";
-                m_sendKeyMouse->sendKeyDown(Qt::Key_Shift);
+                //m_sendKeyMouse->sendKeyDown(Qt::Key_Shift);
+                keybd_event( VK_SHIFT, 0,0,0 );
             }
             ++data;
         }

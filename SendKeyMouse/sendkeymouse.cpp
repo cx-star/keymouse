@@ -131,7 +131,7 @@ void SendKeyMouse::sendKey(Qt::Key key1, Qt::Key key2)
 void SendKeyMouse::sendKeyDown(Qt::Key key1)
 {
     quint32 i = MyGlobalShortCut::nativeKeycode(key1);
-    keybd_event(i|MOD_SHIFT,0,0,0);
+    keybd_event(i,MapVirtualKey(i,0),0,0);
 }
 void SendKeyMouse::sendKeyUp(Qt::Key key1)
 {

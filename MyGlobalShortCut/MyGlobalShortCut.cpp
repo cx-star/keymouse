@@ -41,7 +41,7 @@ quint32 MyGlobalShortCut::nativeKeycode(Qt::Key key)
     switch (key)
     {
     case Qt::Key_Shift:
-        return VK_SHIFT;
+        return VK_RSHIFT;
     case Qt::Key_Alt:
         return VK_MENU;
     case Qt::Key_Control:
