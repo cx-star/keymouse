@@ -18,6 +18,7 @@
 #include <QTimer>
 #include <QScrollBar>
 #include <QMimeData>
+#include <QStringList>
 
 #define VALUEFROMCLIP "valueFromClip"
 #define SEPATATOR "#"
@@ -26,6 +27,7 @@
 #define MOUSE_RIGHT "R"
 #define CMD_TEXT "C"
 #define DIY_TEXT "D"
+#define DIY_NUMBER_ONEBYONE "d"
 #define EQUAL_TEXT "E"
 #define ArrowTab "A"
 #define COPY "F"
@@ -56,7 +58,7 @@ Widget::Widget(QWidget *parent) :
     ui(new Ui::Widget)
 {
 	ui->setupUi(this);
-    this->setWindowTitle("星辰自动鼠标键盘V0.2 2016年11月5日");
+    this->setWindowTitle("星辰自动鼠标键盘");
     //this->setAttribute( Qt::WA_DeleteOnClose);
 
     m_clipboard = QApplication::clipboard();
@@ -686,8 +688,8 @@ void ProcessThread::mouseClick(int x, int y)
 //设置剪切板 并 粘贴
 void ProcessThread::sendText(QString s)
 {
-    QApplication::clipboard()->setText(s);//改为信号槽
-    //emit setClip(s);
+    //QApplication::clipboard()->setText(s);//线程内不工作
+    emit setClip(s);
     this->msleep(20);//防止复制漏掉
 	m_sendKeyMouse->sendKey (Qt::Key_Control,Qt::Key_V);
 }
@@ -695,11 +697,11 @@ void ProcessThread::processCMD(QStringList list)
 {
 	if(list.size ()<3)
 		return;
-    if(list.at (0)==MOUSE_LEFT)
+    if(list.at (0)==MOUSE_LEFT)//鼠标左键单击
 	{
 		mouseClick(list.at (1).toInt (),list.at (2).toInt ());
 	}
-    else if(list.at(0)==MOUSE_RIGHT)
+    else if(list.at(0)==MOUSE_RIGHT)//鼠标右键单击
     {
         m_sendKeyMouse->mouse_right(list.at (1).toInt (),list.at (2).toInt ());
         this->msleep(100);
@@ -717,6 +719,34 @@ void ProcessThread::processCMD(QStringList list)
         //emit setClip(ss);
 		sendText(ss);
 	}
+    else if(list.at(0)==DIY_NUMBER_ONEBYONE)// d#行号#开始#结束# d#行号#分隔符#index
+    {
+        if(list.size()<4)
+            return;
+        int row = list.at(1).toInt();
+        QTableWidgetItem *item = m_table->item (row,0);
+        QString ss = item==0?QString():item->text ();
+        bool isNumber;
+        int start = list.at(2).toInt(&isNumber);//Returns 0 if the conversion fails.
+        int end = list.at(3).toInt();
+        QString rr;
+        if(isNumber)//数字 // d#行号#开始#结束#
+        {
+            rr = ss.mid(start,end-start+1);
+        }else{
+            QStringList ll = ss.split(list.at(2));
+            rr = ll.at(end);
+        }
+        int i;
+        for(i=0;i<rr.size();i++){
+            if(!rr.at(i).isDigit())
+                return;
+        }
+        for(i=0;i<rr.size();i++){
+            keybd_event(rr.at(i).unicode(),0,0,0);
+            keybd_event(rr.at(i).unicode(),0,KEYEVENTF_KEYUP,0);
+        }
+    }
 	else if(list.at (0)==EQUAL_TEXT)// E#1#123#
 	{
 		int row = list.at (1).toInt ();
@@ -903,4 +933,14 @@ void Widget::closeEvent(QCloseEvent *event)
 {
     mouseFloat->close();
     event->accept();
+}
+
+void Widget::on_pushButtonCLeanCmdText_clicked()
+{
+    modelCmd->removeRows(0,modelCmd->rowCount());
+}
+
+void Widget::on_pushButtonCleanDiyText_clicked()
+{
+    ui->tableWidgetDiy->model()->removeRows(0,ui->tableWidgetDiy->model()->rowCount());
 }

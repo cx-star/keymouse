@@ -85,6 +85,10 @@ private slots:
     void ClipboardChanged(QClipboard::Mode mode);
 
     void on_pushButtonMouseLR_clicked();
+    void on_pushButtonCLeanCmdText_clicked();
+
+    void on_pushButtonCleanDiyText_clicked();
+
 protected:
     void closeEvent(QCloseEvent *event);
 private:
