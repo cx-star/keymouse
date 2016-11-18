@@ -12,7 +12,7 @@ MyGlobalShortCut::MyGlobalShortCut(QString key, QObject *app)
     m_filter = new MyWinEventFilter(this);
     m_app->installNativeEventFilter(m_filter);//QApplication不用初始化，全局唯一
 
-    registerHotKey();
+    registerHotKeyState = registerHotKey();
 }
 
 void MyGlobalShortCut::activateShortcut()

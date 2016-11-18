@@ -49,7 +49,7 @@
 #define ShortCut_F9 "F9"
 #define ShortCut_F10 "F10"
 #define ShortCut_F11 "F11"
-#define ShortCut_F12 "F12"
+#define ShortCut_StopTimer "F11"
 
 QSemaphore sem_OneStep;
 
@@ -123,11 +123,15 @@ Widget::Widget(QWidget *parent) :
 
 	//全局快捷键类MyGlobalShortCut测试
 	QStringList shortCutList;
-	shortCutList<<ShortCut_F6<<ShortCut_F7<<ShortCut_F8<<ShortCut_F9<<ShortCut_F10<<ShortCut_F11<<ShortCut_F12;
+    shortCutList<<ShortCut_F6<<ShortCut_F7<<ShortCut_F8<<ShortCut_F9<<ShortCut_F10<<ShortCut_F11;
 	foreach(QString s,shortCutList)
 	{
 		MyGlobalShortCut *shortcut = new MyGlobalShortCut(s,this);
-		QObject::connect(shortcut,SIGNAL(activated(QString)),this,SLOT(shortcut_t_slot(QString)));
+        if(shortcut->registerHotKeyState)
+            QObject::connect(shortcut,SIGNAL(activated(QString)),this,SLOT(shortcut_t_slot(QString)));
+        else{
+            QMessageBox::warning(this,"错误","注册快捷键错误:"+s);
+        }
 	}
 
 	//不同配置
@@ -135,8 +139,7 @@ Widget::Widget(QWidget *parent) :
 	comboBoxList<<ui->comboBoxF8;
 	comboBoxList<<ui->comboBoxF9;
 	comboBoxList<<ui->comboBoxF10;
-	comboBoxList<<ui->comboBoxF11;
-	comboBoxList<<ui->comboBoxF12;
+    comboBoxList<<ui->comboBoxF11;
 	comboBoxList<<ui->comboBoxIni;
 
 	QString applicationDirPath = QCoreApplication::applicationDirPath();
@@ -184,26 +187,35 @@ void Widget::setClip(QString s)//设置剪切板，槽函数，在进程里面�
 {
     m_clipboard->setText (s);
 }
-
+//定时器调用 和 响应快捷键
 void Widget::shortcut_t_slot(QString s)//所有快捷键处理函数
 {
+    if(s == ShortCut_StopTimer){
+        ui->checkBoxTimer->setChecked(false);
+        m_StepTimer->stop ();
+        currentStepName.clear();
+        return;
+    }
     if(!oneStepIsEnd && currentStepName!=s)//单步未完成，按了别的按键
     {
-        QMessageBox::warning(this,"单步未完成",QString("正在执行%1\r\n当前按键%2").arg(currentStepName).arg(s));
+        QMessageBox::warning(this,"单步未完成",QString("单步未完成\r\n正在执行%1\r\n当前按键%2").arg(currentStepName).arg(s));
+        return;
+    }
+    if(s==ShortCut_Mouse) //捕获鼠标位置 F6
+    {
+        QPoint point = sendKeyMouse->getMousePoint();
+        ui->mouseX->setValue(point.x());
+        ui->mouseY->setValue(point.y());
+        button_mouseClick(MouseAction_LBUTTONDOWN);
         return;
     }
     //新的开始
     currentStepName = s;//当前单步快捷键
     if(s==ShortCut_Go)//执行modelCmd即ini  F7
-		doCmd(true);
-    else if(s==ShortCut_Mouse) //捕获鼠标位置
     {
-		QPoint point = sendKeyMouse->getMousePoint();
-		ui->mouseX->setValue(point.x());
-		ui->mouseY->setValue(point.y());
-        button_mouseClick(MouseAction_LBUTTONDOWN);
+        doCmd(true);
     }
-	else//ShortCut_F8<<ShortCut_F9<<ShortCut_F10<<ShortCut_F11<<ShortCut_F12)
+    else if(!s.isEmpty())//ShortCut_F8<<ShortCut_F9<<ShortCut_F10)
 	{
         doCmd(false,s);//执行非Ini，快捷键为 s
     }
@@ -323,19 +335,19 @@ void Widget::button_addDiyToCmd()
     insertCmdModelData(s);
 }
 
-void Widget::doCmd(bool isIni,QString shortcutName)
+void Widget::doCmd(bool isIni,QString shortcutName)//isIni shortcutName 参数给greateCMDLines用
 {
-    if(ui->checkBoxOneStep->isChecked())//自动单步执行
+    if(ui->checkBoxOneStep->isChecked())//单步执行
 	{
         if(oneStepIsEnd)//之前执行的是最后一步
 			currentStep = 0;//重新执行
 		if(currentStep==0)//单步开始
 		{
-			createCMDLines(isIni,shortcutName);
+            createCMDLines(isIni,shortcutName);//cmdLines赋值
             totalSteps = cmdLines.size();
             if(totalSteps==0)
             {
-                QMessageBox::warning(this,"单步执行为空",shortcutName);
+                QMessageBox::warning(this,"单步执行为空","快捷键列表"+shortcutName+"为空");
                 return;
             }
 			m_thread->start ();
@@ -345,16 +357,16 @@ void Widget::doCmd(bool isIni,QString shortcutName)
         ui->labelState->setText (QString("%4%1%2/%3").arg ("单步:").arg (currentStep).arg (totalSteps).arg(shortcutName));
         oneStepIsEnd = currentStep==totalSteps;//单步执行完毕
     }
-    else
+    else//非单步执行
     {
 		if(m_thread->isRunning())//批处理操作未结束,按键速度过快
         {
-            QMessageBox::warning(this,"按键速度过快",shortcutName);
+            QMessageBox::warning(this,"按键速度过快","按键速度过快"+shortcutName);
             return;
         }
-		createCMDLines(isIni,shortcutName);
+        createCMDLines(isIni,shortcutName);//cmdLines赋值
         ui->labelState->setText(QString("%1%2").arg(shortcutName).arg("ing"));
-        sem_OneStep.release(cmdLines.size());
+        sem_OneStep.release(cmdLines.size());//可以执行所有命令
 		m_thread->start ();
     }
 
@@ -503,7 +515,7 @@ void Widget::checkBox_oneStep()
     {
         m_thread->terminate();
         m_thread->wait();//确定进程被结束
-        QMessageBox::warning(this,"结束单步",QString("%1").arg(m_thread->isRunning()));
+        QMessageBox::warning(this,"结束单步",QString("结束单步%1").arg(m_thread->isRunning()?"成功":"失败"));
         ui->checkBoxOneStep->setChecked(m_thread->isRunning());
         oneStepIsEnd = !m_thread->isRunning();
     }
@@ -513,7 +525,7 @@ void Widget::checkBox_StaysOnTop()
 {
     if(ui->checkBoxStaysOnTop->isChecked())
     {
-        this->hide();
+        //this->hide();
         //qDebug()<<QString("%1").arg(this->windowFlags(),8,16);
         this->setWindowFlags(Qt::WindowStaysOnTopHint);
         //qDebug()<<QString("%1").arg(this->windowFlags(),8,16);
@@ -521,7 +533,7 @@ void Widget::checkBox_StaysOnTop()
     }
     else
     {
-        this->hide();
+        //this->hide();
         Qt::WindowFlags flags = this->windowFlags();
         //qDebug()<<QString("%1").arg(this->windowFlags(),8,16);
         flags &= ~Qt::WindowStaysOnTopHint;
@@ -566,7 +578,7 @@ void Widget::currentItemChanged(const QModelIndex &current, const QModelIndex &)
 
 void Widget::checkBox_timer()
 {
-	if(ui->checkBoxTimer->isChecked ())
+    if(ui->checkBoxTimer->isChecked ())//定时选框 选中
 	{
 		m_StepTimer->start (ui->spinBoxTimer->value ());
 	}
@@ -578,12 +590,13 @@ void Widget::checkBox_timer()
 
 void Widget::stepTimer_timerout()
 {
+    //没有勾选”单步“则什么都不做
 	if(!ui->checkBoxOneStep->isChecked ())
 		return;
 	//进程执行一圈后，会退出，不能在此作为判断依据
 //	if(!m_thread->isRunning ())
 //		return;
-	shortcut_t_slot(currentStepName);
+    shortcut_t_slot(currentStepName);//快捷键处理函数
 }
 
 void Widget::setCheckBoxTimer()
@@ -605,9 +618,7 @@ QStringList Widget::getCmdByShortCut(QString shortcutName)
 	else if(shortcutName==ShortCut_F10)
 		comboBox = ui->comboBoxF10;
 	else if(shortcutName==ShortCut_F11)
-		comboBox = ui->comboBoxF11;
-	else if(shortcutName==ShortCut_F12)
-		comboBox = ui->comboBoxF12;
+        comboBox = ui->comboBoxF11;
     else
         return QStringList();
 
@@ -615,7 +626,7 @@ QStringList Widget::getCmdByShortCut(QString shortcutName)
 
 	QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        QMessageBox::warning(this,"快捷键没有配置文件",shortcutName);
+        QMessageBox::warning(this,"快捷键没有配置文件","快捷键"+shortcutName+"没有配置文件");
         return QStringList();
     }
 
@@ -627,7 +638,7 @@ QStringList Widget::getCmdByShortCut(QString shortcutName)
 	}
     return list;
 }
-//将table中的 命令 转换成 QStringList
+//将table或其他ini 中的 命令 转换成 QStringList
 void Widget::createCMDLines(bool isIni, QString shortcutName)
 {
 	cmdLines.clear ();
@@ -868,7 +879,7 @@ void ProcessThread::processCMD(QString s)
 	processCMD(list);
 }
 
-void ProcessThread::run()
+void ProcessThread::run()//进程只执行一圈
 {
 	foreach(QString s,m_lines){
         sem_OneStep.acquire(1);
@@ -946,4 +957,29 @@ void Widget::on_pushButtonCLeanCmdText_clicked()
 void Widget::on_pushButtonCleanDiyText_clicked()
 {
     ui->tableWidgetDiy->model()->removeRows(0,ui->tableWidgetDiy->model()->rowCount());
+}
+
+void Widget::on_lineEditCmdText_returnPressed()
+{
+    this->button_sendCmdText();
+}
+
+void Widget::on_lineEditArrow_returnPressed()
+{
+    this->button_sendArrow();
+}
+
+void Widget::on_lineEditDiyText_returnPressed()
+{
+    this->button_AddDiyText();
+}
+
+void Widget::on_pushButtonShowHelp_clicked()
+{
+    int width = this->width();
+    int helpWidth = ui->plainTextEdit->width()+6;
+    ui->plainTextEdit->setHidden(!ui->plainTextEdit->isHidden());
+    this->resize(
+                ui->plainTextEdit->isHidden()?width-helpWidth:width+helpWidth,
+                this->height());
 }

@@ -89,6 +89,14 @@ private slots:
 
     void on_pushButtonCleanDiyText_clicked();
 
+    void on_lineEditCmdText_returnPressed();
+
+    void on_lineEditArrow_returnPressed();
+
+    void on_lineEditDiyText_returnPressed();
+
+    void on_pushButtonShowHelp_clicked();
+
 protected:
     void closeEvent(QCloseEvent *event);
 private:

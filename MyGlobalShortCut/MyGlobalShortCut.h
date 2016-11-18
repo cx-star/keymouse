@@ -19,12 +19,12 @@ class MyGlobalShortCut : public QObject
     Q_OBJECT
 public:
 
-
     MyGlobalShortCut(QString key,QObject* app);
     ~MyGlobalShortCut();
     void activateShortcut();
     bool registerHotKey();
     bool unregisterHotKey();
+    bool registerHotKeyState;
     QHash<QPair<quint32, quint32>, MyGlobalShortCut*> shortcuts;
     static quint32 nativeKeycode(Qt::Key keycode);
     static quint32 nativeModifiers(Qt::KeyboardModifiers modifiers);
