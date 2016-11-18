@@ -499,10 +499,10 @@ void Widget::iniChanged(QString s)
 
 void Widget::checkBox_oneStep()
 {
-    if(!ui->checkBoxOneStep->isChecked() && m_thread->isRunning())
+    if(!ui->checkBoxOneStep->isChecked() && m_thread->isRunning())//取消选中单步选框，且进程在运行
     {
         m_thread->terminate();
-        m_thread->wait();
+        m_thread->wait();//确定进程被结束
         QMessageBox::warning(this,"结束单步",QString("%1").arg(m_thread->isRunning()));
         ui->checkBoxOneStep->setChecked(m_thread->isRunning());
         oneStepIsEnd = !m_thread->isRunning();
@@ -735,7 +735,10 @@ void ProcessThread::processCMD(QStringList list)
             rr = ss.mid(start,end-start+1);
         }else{
             QStringList ll = ss.split(list.at(2));
-            rr = ll.at(end);
+            if(ll.size()>end)
+                rr = ll.at(end);
+            else
+                rr.append("1");
         }
         int i;
         for(i=0;i<rr.size();i++){
