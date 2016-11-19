@@ -171,7 +171,7 @@ Widget::Widget(QWidget *parent) :
 	ui->comboBoxDiy->setModel(diyModel);
 	ui->comboBoxDiy->view()->setRootIndex(diyModel->index(IniPath));
 
-	//
+    //初始化 定时器，调用shortcut_t_slot，其中doCMD函数release
 	m_StepTimer = new QTimer(this);
 	connect(m_StepTimer,SIGNAL(timeout()),this,SLOT(stepTimer_timerout()));
 	connect(ui->checkBoxTimer,SIGNAL(clicked()),this,SLOT(checkBox_timer()));
