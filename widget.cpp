@@ -171,7 +171,7 @@ Widget::Widget(QWidget *parent) :
 	ui->comboBoxDiy->setModel(diyModel);
 	ui->comboBoxDiy->view()->setRootIndex(diyModel->index(IniPath));
 
-	//
+    //初始化 定时器，调用shortcut_t_slot，其中doCMD函数release
 	m_StepTimer = new QTimer(this);
 	connect(m_StepTimer,SIGNAL(timeout()),this,SLOT(stepTimer_timerout()));
 	connect(ui->checkBoxTimer,SIGNAL(clicked()),this,SLOT(checkBox_timer()));
@@ -260,6 +260,10 @@ void Widget::button_mouseClick()
 
 void Widget::button_sendCmdText()//将lineEditCmdText内容插入 modelCmd
 {
+    //for test StateWidget
+    stateWidget->setText(stateWidget->text()+"\r\n"+ui->lineEditCmdText->text ());
+    stateWidget->adjustSize();
+    return;
 	QString s = ui->lineEditCmdText->text ();
 	if(s.isEmpty ())
 		return;
