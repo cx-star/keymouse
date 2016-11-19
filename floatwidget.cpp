@@ -15,7 +15,7 @@ FloatWidget::FloatWidget(QString disText, QWidget *parent) :
     setWindowState(Qt::WindowNoState //不激活
                    );
 
-    //this->setWindowOpacity(0.7);
+    this->setWindowOpacity(0.7);
     resize(30,30);
 
     m_disText = disText;

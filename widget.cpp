@@ -74,6 +74,8 @@ Widget::Widget(QWidget *parent) :
     this->setWindowOpacity((qreal)ui->spinBoxOpacity->value()/100);
     //悬浮窗
     mouseFloat = new FloatWidget("?");
+    //状态窗口
+    stateWidget = new StateWidget();
 
     connect(ui->checkBoxStaysOnTop,SIGNAL(clicked()),this,SLOT(checkBox_StaysOnTop()));
     connect(ui->checkBoxFloatWidget,SIGNAL(clicked()),this,SLOT(checkBox_FloatWidget()));
@@ -188,20 +190,20 @@ void Widget::setClip(QString s)//设置剪切板，槽函数，在进程里面�
     m_clipboard->setText (s);
 }
 //定时器调用 和 响应快捷键
-void Widget::shortcut_t_slot(QString s)//所有快捷键处理函数
+void Widget::shortcut_t_slot(QString key)//所有快捷键处理函数
 {
-    if(s == ShortCut_StopTimer){
+    if(key == ShortCut_StopTimer){
         ui->checkBoxTimer->setChecked(false);
         m_StepTimer->stop ();
         currentStepName.clear();
         return;
     }
-    if(!oneStepIsEnd && currentStepName!=s)//单步未完成，按了别的按键
+    if(!oneStepIsEnd && currentStepName!=key)//单步未完成，按了别的按键
     {
-        QMessageBox::warning(this,"单步未完成",QString("单步未完成\r\n正在执行%1\r\n当前按键%2").arg(currentStepName).arg(s));
+        QMessageBox::warning(this,"单步未完成",QString("单步未完成\r\n正在执行%1\r\n当前按键%2").arg(currentStepName).arg(key));
         return;
     }
-    if(s==ShortCut_Mouse) //捕获鼠标位置 F6
+    if(key==ShortCut_Mouse) //捕获鼠标位置 F6
     {
         QPoint point = sendKeyMouse->getMousePoint();
         ui->mouseX->setValue(point.x());
@@ -210,14 +212,14 @@ void Widget::shortcut_t_slot(QString s)//所有快捷键处理函数
         return;
     }
     //新的开始
-    currentStepName = s;//当前单步快捷键
-    if(s==ShortCut_Go)//执行modelCmd即ini  F7
+    currentStepName = key;//当前单步快捷键
+    if(key==ShortCut_Go)//执行modelCmd即ini  F7
     {
-        doCmd(true);
+        doCmd(true);//createCMDLines(bool,key) release(1/all)
     }
-    else if(!s.isEmpty())//ShortCut_F8<<ShortCut_F9<<ShortCut_F10)
+    else if(!key.isEmpty())//ShortCut_F8<<ShortCut_F9<<ShortCut_F10)
 	{
-        doCmd(false,s);//执行非Ini，快捷键为 s
+        doCmd(false,key);//执行非Ini，快捷键为 key
     }
 }
 
@@ -946,6 +948,7 @@ void Widget::on_pushButtonMouseLR_clicked()
 void Widget::closeEvent(QCloseEvent *event)
 {
     mouseFloat->close();
+    stateWidget->close();
     event->accept();
 }
 
@@ -982,4 +985,9 @@ void Widget::on_pushButtonShowHelp_clicked()
     this->resize(
                 ui->plainTextEdit->isHidden()?width-helpWidth:width+helpWidth,
                 this->height());
+}
+
+void Widget::on_checkBoxStateWidget_clicked(bool checked)
+{
+    checked?stateWidget->show():stateWidget->hide();
 }

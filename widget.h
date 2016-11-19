@@ -9,6 +9,7 @@
 #include <QTableWidget>
 #include <QClipboard>
 #include "floatwidget.h"
+#include "statewidget.h"
 #include "hookfunction.h"
 
 namespace Ui {
@@ -50,7 +51,7 @@ public:
     QClipboard *m_clipboard;
 private slots:
     void setClip(QString s);
-    void shortcut_t_slot(QString);
+    void shortcut_t_slot(QString key);
 
     void button_mouseClick(MouseActionType type);
     void button_mouseClick();
@@ -97,6 +98,8 @@ private slots:
 
     void on_pushButtonShowHelp_clicked();
 
+    void on_checkBoxStateWidget_clicked(bool checked);
+
 protected:
     void closeEvent(QCloseEvent *event);
 private:
@@ -124,6 +127,7 @@ private:
     QString currentStepName;
 
     FloatWidget *mouseFloat;
+    StateWidget *stateWidget;
 
 	QTimer *m_StepTimer;
 

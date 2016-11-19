@@ -20,14 +20,16 @@ SOURCES += main.cpp\
     MyGlobalShortCut/MyWinEventFilter.cpp \
     SendKeyMouse/sendkeymouse.cpp \
     floatwidget.cpp \
-    hookfunction.cpp
+    hookfunction.cpp \
+    statewidget.cpp
 
 HEADERS  += widget.h \
     MyGlobalShortCut/MyGlobalShortCut.h \
     MyGlobalShortCut/MyWinEventFilter.h \
     SendKeyMouse/sendkeymouse.h \
     floatwidget.h \
-    hookfunction.h
+    hookfunction.h \
+    statewidget.h
 
 FORMS    += widget.ui
 
