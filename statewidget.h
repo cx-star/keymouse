@@ -15,6 +15,7 @@ class StateWidget : public QLabel
 public:
     explicit StateWidget(QWidget *parent = 0);
     ~StateWidget();
+    void updateDiaplay();
 
 private:
     Ui::StateWidget *ui;

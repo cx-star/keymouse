@@ -100,6 +100,8 @@ private slots:
 
     void on_checkBoxStateWidget_clicked(bool checked);
 
+    void on_pushButtonStateSetting_clicked();
+
 protected:
     void closeEvent(QCloseEvent *event);
 private:

@@ -19,6 +19,8 @@
 #include <QScrollBar>
 #include <QMimeData>
 #include <QStringList>
+#include <QDesktopWidget>
+#include "statesettingdialog.h"
 
 #define VALUEFROMCLIP "valueFromClip"
 #define SEPATATOR "#"
@@ -260,10 +262,12 @@ void Widget::button_mouseClick()
 
 void Widget::button_sendCmdText()//将lineEditCmdText内容插入 modelCmd
 {
-    //for test StateWidget
-    stateWidget->setText(stateWidget->text()+"\r\n"+ui->lineEditCmdText->text ());
-    stateWidget->adjustSize();
-    return;
+//    //for test StateWidget
+//    stateWidget->setText(stateWidget->text()+"\r\n"+ui->lineEditCmdText->text ());
+//    stateWidget->adjustSize();
+//    QRect rect = QApplication::desktop()->availableGeometry();
+//    stateWidget->move(rect.width()-stateWidget->width(),rect.height()-stateWidget->height());
+//    return;
 	QString s = ui->lineEditCmdText->text ();
 	if(s.isEmpty ())
 		return;
@@ -543,7 +547,7 @@ void Widget::checkBox_StaysOnTop()
         Qt::WindowFlags flags = this->windowFlags();
         //qDebug()<<QString("%1").arg(this->windowFlags(),8,16);
         flags &= ~Qt::WindowStaysOnTopHint;
-        this->setWindowFlags(flags);
+        this->setWindowFlags(flags);//需重新show
         //qDebug()<<QString("%1").arg(this->windowFlags(),8,16);
         this->show();
     }
@@ -994,4 +998,11 @@ void Widget::on_pushButtonShowHelp_clicked()
 void Widget::on_checkBoxStateWidget_clicked(bool checked)
 {
     checked?stateWidget->show():stateWidget->hide();
+}
+
+void Widget::on_pushButtonStateSetting_clicked()
+{
+    StateSettingDialog d;
+    d.exec();
+    stateWidget->updateDiaplay();
 }
