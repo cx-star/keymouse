@@ -4,7 +4,7 @@
 #include <QCoreApplication>
 #include "statewidget.h"
 
-void StateWidget::updateDiaplay()
+void StateWidget::updateDisplay()
 {
     QSettings setting(QCoreApplication::applicationDirPath()+"setting.ini",QSettings::IniFormat);
 
@@ -44,7 +44,7 @@ StateWidget::StateWidget(QWidget *parent) :
                     );
     setWindowState(Qt::WindowNoState); //不激活
 
-    updateDiaplay();
+    updateDisplay();
 }
 
 

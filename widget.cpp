@@ -40,8 +40,8 @@
 #define ShiftDown s
 #define ShiftUp S
 //改变自定义文本PQ
-#define DIY_UP "P"
-#define DIY_DOWN "Q"
+#define DIY_INCREASE "P"
+#define DIY_DECREASE "Q"
 
 #define ShortCut_Mouse "F6"
 #define ShortCut_Go "F7"
@@ -121,7 +121,8 @@ Widget::Widget(QWidget *parent) :
 	currentStep = 0;
 	m_thread = new ProcessThread();
 	connect(m_thread,SIGNAL(setClip(QString)),this,SLOT(setClip(QString)));
-	m_thread->m_table = ui->tableWidgetDiy;
+    connect(m_thread,SIGNAL(currentProcessCmd(QString)),this,SLOT(currentProcessCmd(QString)));
+    m_thread->m_table = ui->tableWidgetDiy;
     sendKeyMouse = new SendKeyMouse();
     m_thread->m_sendKeyMouse = sendKeyMouse;
 
@@ -190,16 +191,18 @@ Widget::~Widget()
 void Widget::setClip(QString s)//设置剪切板，槽函数，在进程里面剪切板出错
 {
     m_clipboard->setText (s);
+    thisClipboardText = s;
 }
 //定时器调用 和 响应快捷键
 void Widget::shortcut_t_slot(QString key)//所有快捷键处理函数
 {
+    /*ctrl+t 代替
     if(key == ShortCut_StopTimer){
         ui->checkBoxTimer->setChecked(false);
         m_StepTimer->stop ();
         currentStepName.clear();
         return;
-    }
+    }*/
     if(!oneStepIsEnd && currentStepName!=key)//单步未完成，按了别的按键
     {
         QMessageBox::warning(this,"单步未完成",QString("单步未完成\r\n正在执行%1\r\n当前按键%2").arg(currentStepName).arg(key));
@@ -225,7 +228,15 @@ void Widget::shortcut_t_slot(QString key)//所有快捷键处理函数
     }
 }
 
-void Widget::insertCmdModelData(QString s)//将s插入modelCmd
+void Widget::currentProcessCmd(const QString &s)
+{
+    stateWidget->setText(s);
+    stateWidget->adjustSize();
+    QRect rect = QApplication::desktop()->availableGeometry();
+    stateWidget->move(rect.width()-stateWidget->width(),rect.height()-stateWidget->height());
+}
+
+void Widget::insertCmdModelData(const QString& s)//将s插入modelCmd
 {
     int row;
     QModelIndexList list = ui->listViewCmd->selectionModel ()->selectedRows ();
@@ -262,12 +273,6 @@ void Widget::button_mouseClick()
 
 void Widget::button_sendCmdText()//将lineEditCmdText内容插入 modelCmd
 {
-//    //for test StateWidget
-//    stateWidget->setText(stateWidget->text()+"\r\n"+ui->lineEditCmdText->text ());
-//    stateWidget->adjustSize();
-//    QRect rect = QApplication::desktop()->availableGeometry();
-//    stateWidget->move(rect.width()-stateWidget->width(),rect.height()-stateWidget->height());
-//    return;
 	QString s = ui->lineEditCmdText->text ();
 	if(s.isEmpty ())
 		return;
@@ -345,7 +350,7 @@ void Widget::button_addDiyToCmd()
     insertCmdModelData(s);
 }
 
-void Widget::doCmd(bool isIni,QString shortcutName)//isIni shortcutName 参数给greateCMDLines用
+void Widget::doCmd(bool isIni, const QString &shortcutName)//isIni shortcutName 参数给greateCMDLines（初始化cmdLines）用
 {
     if(ui->checkBoxOneStep->isChecked())//单步执行
 	{
@@ -381,7 +386,7 @@ void Widget::doCmd(bool isIni,QString shortcutName)//isIni shortcutName 参数�
     }
 
 }
-int ProcessThread::findNum(const QString s,int start){
+int ProcessThread::findNum(const QString &s, int start){
     int n = s.size();
     int p = start;
     while(p<n){
@@ -391,7 +396,7 @@ int ProcessThread::findNum(const QString s,int start){
     }
     return p==n?-1:p;
 }
-int ProcessThread::findNotNum(const QString s,int start){
+int ProcessThread::findNotNum(const QString &s, int start){
     int n = s.size();
     int p = start;
     while(p<n){
@@ -402,7 +407,7 @@ int ProcessThread::findNotNum(const QString s,int start){
     return p==n?-1:p;
 }
 
-QString ProcessThread::encodeArrowNum(const QString s)
+QString ProcessThread::encodeArrowNum(const QString &s)
 {//将方向命令中数字转换成对应方向命令
     QString r;
     int n = s.size();
@@ -585,7 +590,7 @@ void Widget::currentItemChanged(const QModelIndex &current, const QModelIndex &)
         ui->pushButtonMouseLR->setEnabled(true);
     }
 }
-
+//定时器选框 开启或关闭 定时器
 void Widget::checkBox_timer()
 {
     if(ui->checkBoxTimer->isChecked ())//定时选框 选中
@@ -597,7 +602,7 @@ void Widget::checkBox_timer()
 		m_StepTimer->stop ();
 	}
 }
-
+//定时器超时处理函数：在单步状态下，调用shortcut_t_slot
 void Widget::stepTimer_timerout()
 {
     //没有勾选”单步“则什么都不做
@@ -618,7 +623,7 @@ void Widget::setCheckBoxTimer()
 
 //通过快捷键找到相应配置文件，读出，返回内容StringList
 //仅被createCMDLines调用
-QStringList Widget::getCmdByShortCut(QString shortcutName)
+QStringList Widget::getCmdByShortCut(const QString &shortcutName)
 {
 	QComboBox *comboBox;
     if(shortcutName==ShortCut_F8)
@@ -669,9 +674,9 @@ void Widget::createCMDLines(bool isIni, QString shortcutName)
 	m_thread->m_lines = cmdLines;
 }
 
-void Widget::readIniToView(QString fileName)
+void Widget::readIniToView(const QString &m_fileName)
 {
-    fileName = IniPath+fileName;
+    QString fileName = IniPath+m_fileName;
     QFile file(fileName);
     if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
@@ -686,7 +691,7 @@ void Widget::readIniToView(QString fileName)
     }
 }
 
-void Widget::writeViewToIni(QString fileName)
+void Widget::writeViewToIni(const QString &fileName)
 {
     QFile file(fileName);
      if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -707,30 +712,44 @@ void ProcessThread::mouseClick(int x, int y)
     this->msleep(100);
 }
 //设置剪切板 并 粘贴
-void ProcessThread::sendText(QString s)
+void ProcessThread::sendText(const QString &s)
 {
     //QApplication::clipboard()->setText(s);//线程内不工作
     emit setClip(s);
     this->msleep(20);//防止复制漏掉
 	m_sendKeyMouse->sendKey (Qt::Key_Control,Qt::Key_V);
 }
+void ProcessThread::resizeQString(QString& s,int size)
+{
+    if(s.size()>size){
+        s.resize(size-1);
+        s.append("...");
+    }
+}
+
 void ProcessThread::processCMD(QStringList list)
 {
 	if(list.size ()<3)
 		return;
     if(list.at (0)==MOUSE_LEFT)//鼠标左键单击
 	{
-		mouseClick(list.at (1).toInt (),list.at (2).toInt ());
+        int x = list.at(1).toInt();
+        int y = list.at(2).toInt();
+        mouseClick(x,y);
+        emit(currentProcessCmd(QString("鼠标左键%1:%2").arg(x).arg(y)));
 	}
     else if(list.at(0)==MOUSE_RIGHT)//鼠标右键单击
     {
         m_sendKeyMouse->mouse_right(list.at (1).toInt (),list.at (2).toInt ());
+        emit(currentProcessCmd(QString("鼠标右键键%1:%2").arg(list.at (1).toInt ()).arg(list.at (2).toInt ())));
         this->msleep(100);
     }
 	else if(list.at (0)==CMD_TEXT)
 	{
-        //emit setClip(list.at (1));
-		sendText(list.at (1));
+        QString s = list.at(1);
+        sendText(s);
+        resizeQString(s,5);
+        emit(currentProcessCmd(QString("发送固定文本:%1").arg(s)));
     }
 	else if(list.at (0)==DIY_TEXT)
 	{
@@ -738,7 +757,9 @@ void ProcessThread::processCMD(QStringList list)
 		QTableWidgetItem *item = m_table->item (row,0);
         QString ss = item==0?QString():item->text ();
         //emit setClip(ss);
-		sendText(ss);
+        sendText(ss);
+        resizeQString(ss,5);
+        emit(currentProcessCmd(QString("发送自定义%1行文本:%2").arg(row).arg(ss)));
 	}
     else if(list.at(0)==DIY_NUMBER_ONEBYONE)// d#行号#开始#结束# d#行号#分隔符#index
     {
@@ -865,14 +886,14 @@ void ProcessThread::processCMD(QStringList list)
         if(delay>0&&delay<10000)
             this->msleep(delay);
     }
-    else if(list.at(0)==DIY_UP||list.at(0)==DIY_DOWN)
+    else if(list.at(0)==DIY_INCREASE||list.at(0)==DIY_DECREASE)
     {
         int row = list.at (1).toInt ();
         int step = list.at(2).toInt();
         QTableWidgetItem *item = m_table->item (row,0);//数字对应行
         if(item!=0){
             int num = item->text ().toInt();//行对应数字
-            if(list.at(0)==DIY_UP)
+            if(list.at(0)==DIY_INCREASE)
                 num+=step;
             else
                 num-=step;
@@ -915,17 +936,16 @@ void Widget::AutoMouse_clicked(QPoint point, MouseActionType type)
     ui->mouseY->setValue(point.y());
     button_mouseClick(type);
 }
-
+//剪切板 内容改变，自动更新自定义文本内容
 void Widget::ClipboardChanged(QClipboard::Mode mode)
 {
     //qDebug()<<"ClipboardChanged "<<mode;
     if(mode == QClipboard::Clipboard&&ui->checkBoxClipboard->isChecked()&&ui->checkBoxClipValue->isChecked()){
-        //qDebug()<<"data ";
-        //qDebug()<<m_clipboard->mimeData(QClipboard::Clipboard)->formats();
-        //qDebug()<<m_clipboard->mimeData(QClipboard::Clipboard)->data("text/html");
-        //qDebug()<<m_clipboard->mimeData(QClipboard::Clipboard)->data("text/plain");
-        QStringList clipValueList = m_clipboard->text().split('\t'/*,QString::SkipEmptyParts*/);
-        qDebug()<<clipValueList.size();
+        QString text = m_clipboard->text();
+        if(text==thisClipboardText)//程序自己更新的剪切板，则不做处理
+            return;
+        QStringList clipValueList = m_clipboard->text().split('\t');//默认是keepEmptyParts
+        //qDebug()<<clipValueList.size();
         int start = ui->spinBoxClipValueStart->value()-1;
         int end = ui->spinBoxClipValueEnd->value()-1;
         if(start<0||end<start)
@@ -937,7 +957,7 @@ void Widget::ClipboardChanged(QClipboard::Mode mode)
         }
     }
 }
-
+//切换 命令列表中 鼠标左右键
 void Widget::on_pushButtonMouseLR_clicked()
 {
     QModelIndex current_modeindex=ui->listViewCmd->selectionModel()->currentIndex();
@@ -959,12 +979,12 @@ void Widget::closeEvent(QCloseEvent *event)
     stateWidget->close();
     event->accept();
 }
-
+//清空命令列表
 void Widget::on_pushButtonCLeanCmdText_clicked()
 {
     modelCmd->removeRows(0,modelCmd->rowCount());
 }
-
+//清空自定义文本列表
 void Widget::on_pushButtonCleanDiyText_clicked()
 {
     ui->tableWidgetDiy->model()->removeRows(0,ui->tableWidgetDiy->model()->rowCount());
@@ -984,7 +1004,7 @@ void Widget::on_lineEditDiyText_returnPressed()
 {
     this->button_AddDiyText();
 }
-
+//显示或隐藏 帮助界面
 void Widget::on_pushButtonShowHelp_clicked()
 {
     int width = this->width();
@@ -994,15 +1014,15 @@ void Widget::on_pushButtonShowHelp_clicked()
                 ui->plainTextEdit->isHidden()?width-helpWidth:width+helpWidth,
                 this->height());
 }
-
+//根据选框 显示或隐藏 状态窗口
 void Widget::on_checkBoxStateWidget_clicked(bool checked)
 {
     checked?stateWidget->show():stateWidget->hide();
 }
-
+//状态窗口设置窗口
 void Widget::on_pushButtonStateSetting_clicked()
 {
     StateSettingDialog d;
     d.exec();
-    stateWidget->updateDiaplay();
+    stateWidget->updateDisplay();
 }

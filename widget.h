@@ -29,15 +29,17 @@ public:
 	void processCMD(QString s);
 	void processCMD(QStringList list);
 	void mouseClick(int x, int y);
-	void sendText(QString s);
+    void sendText(const QString& s);
 protected:
 	void run();
 signals:
-    void setClip(QString s);
+    void setClip(const QString& s);
+    void currentProcessCmd(const QString& s);
 private:
-    QString encodeArrowNum(const QString s);
-    int findNotNum(const QString s, int start);
-    int findNum(const QString s, int start);
+    QString encodeArrowNum(const QString& s);
+    int findNotNum(const QString& s, int start);
+    int findNum(const QString& s, int start);
+    void resizeQString(QString &s, int size);
 };
 
 class Widget : public QWidget
@@ -48,10 +50,11 @@ public:
     explicit Widget(QWidget *parent = 0);
     ~Widget();
 
-    QClipboard *m_clipboard;
 private slots:
     void setClip(QString s);
     void shortcut_t_slot(QString key);
+
+    void currentProcessCmd(const QString& s);
 
     void button_mouseClick(MouseActionType type);
     void button_mouseClick();
@@ -107,24 +110,26 @@ protected:
 private:
 	Ui::Widget *ui;
 
+    QClipboard *m_clipboard;
+    QString thisClipboardText;
 	ProcessThread* m_thread;
     SendKeyMouse *sendKeyMouse;
 
 	QStringListModel *modelCmd;
 
-	void insertCmdModelData(QString s);
+    void insertCmdModelData(const QString &s);
 
 	QStringList cmdLines;
-	QStringList getCmdByShortCut(QString shortcutName);
+    QStringList getCmdByShortCut(const QString& shortcutName);
 	void createCMDLines(bool isIni,QString shortcutName);
 
 	int totalSteps,currentStep;
 
     QString IniPath;
-    void readIniToView(QString fileName);
-    void writeViewToIni(QString fileName);
+    void readIniToView(const QString& m_fileName);
+    void writeViewToIni(const QString& fileName);
 
-	void doCmd(bool isIni, QString shortcutName=QString());
+    void doCmd(bool isIni, const QString& shortcutName=QString());
     bool oneStepIsEnd;
     QString currentStepName;
 
