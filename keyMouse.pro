@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     SendKeyMouse/sendkeymouse.cpp \
     floatwidget.cpp \
     hookfunction.cpp \
-    statewidget.cpp
+    statewidget.cpp \
+    statesettingdialog.cpp
 
 HEADERS  += widget.h \
     MyGlobalShortCut/MyGlobalShortCut.h \
@@ -29,9 +30,11 @@ HEADERS  += widget.h \
     SendKeyMouse/sendkeymouse.h \
     floatwidget.h \
     hookfunction.h \
-    statewidget.h
+    statewidget.h \
+    statesettingdialog.h
 
-FORMS    += widget.ui
+FORMS    += widget.ui \
+    statesettingdialog.ui
 
 OTHER_FILES +=
 

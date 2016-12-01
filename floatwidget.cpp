@@ -11,6 +11,7 @@ FloatWidget::FloatWidget(QString disText, QWidget *parent) :
     setWindowFlags(windowFlags()
                    |Qt::FramelessWindowHint //去边框
                    |Qt::WindowStaysOnTopHint
+                   |Qt::Tool
                     );
     setWindowState(Qt::WindowNoState //不激活
                    );
