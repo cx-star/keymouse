@@ -205,7 +205,7 @@ void Widget::shortcut_t_slot(QString key)//所有快捷键处理函数
     }*/
     if(!oneStepIsEnd && currentStepName!=key)//单步未完成，按了别的按键
     {
-        QMessageBox::warning(this,"单步未完成",QString("单步未完成\r\n正在执行%1\r\n当前按键%2").arg(currentStepName).arg(key));
+        emit(currentProcessCmd(QString("单步未完成\r\n正在执行%1\r\n当前按键%2").arg(currentStepName).arg(key)));
         return;
     }
     if(key==ShortCut_Mouse) //捕获鼠标位置 F6
@@ -213,7 +213,7 @@ void Widget::shortcut_t_slot(QString key)//所有快捷键处理函数
         QPoint point = sendKeyMouse->getMousePoint();
         ui->mouseX->setValue(point.x());
         ui->mouseY->setValue(point.y());
-        button_mouseClick(MouseAction_LBUTTONDOWN);
+        button_mouseClick(MouseAction_LBUTTONDOWN);//将 鼠标位置 插入 modelCmd
         return;
     }
     //新的开始
@@ -353,11 +353,13 @@ void Widget::button_addDiyToCmd()
 void Widget::doCmd(bool isIni, const QString &shortcutName)//isIni shortcutName 参数给greateCMDLines（初始化cmdLines）用
 {
     if(ui->checkBoxOneStep->isChecked())//单步执行
-	{
+    {
         if(oneStepIsEnd)//之前执行的是最后一步
 			currentStep = 0;//重新执行
 		if(currentStep==0)//单步开始
 		{
+            if(m_thread->isRunning())
+                return;
             createCMDLines(isIni,shortcutName);//cmdLines赋值
             totalSteps = cmdLines.size();
             if(totalSteps==0)
@@ -367,7 +369,7 @@ void Widget::doCmd(bool isIni, const QString &shortcutName)//isIni shortcutName 
             }
 			m_thread->start ();
 		}
-		currentStep++;
+        currentStep++;
 		sem_OneStep.release(1);
         ui->labelState->setText (QString("%4%1%2/%3").arg ("单步:").arg (currentStep).arg (totalSteps).arg(shortcutName));
         oneStepIsEnd = currentStep==totalSteps;//单步执行完毕
@@ -529,8 +531,8 @@ void Widget::checkBox_oneStep()
     if(!ui->checkBoxOneStep->isChecked() && m_thread->isRunning())//取消选中单步选框，且进程在运行
     {
         m_thread->terminate();
-        m_thread->wait();//确定进程被结束
-        QMessageBox::warning(this,"结束单步",QString("结束单步%1").arg(m_thread->isRunning()?"成功":"失败"));
+        qDebug()<<"m_thread->wait"<<m_thread->wait();//确定进程被结束
+        QMessageBox::warning(this,"结束单步",QString("结束单步%1").arg(m_thread->isRunning()?"失败":"成功"));
         ui->checkBoxOneStep->setChecked(m_thread->isRunning());
         oneStepIsEnd = !m_thread->isRunning();
     }
@@ -621,55 +623,41 @@ void Widget::setCheckBoxTimer()
 	ui->checkBoxTimer->click ();
 }
 
-//通过快捷键找到相应配置文件，读出，返回内容StringList
-//仅被createCMDLines调用
-QStringList Widget::getCmdByShortCut(const QString &shortcutName)
-{
-	QComboBox *comboBox;
-    if(shortcutName==ShortCut_F8)
-		comboBox = ui->comboBoxF8;
-	else if(shortcutName==ShortCut_F9)
-		comboBox = ui->comboBoxF9;
-	else if(shortcutName==ShortCut_F10)
-		comboBox = ui->comboBoxF10;
-	else if(shortcutName==ShortCut_F11)
-        comboBox = ui->comboBoxF11;
-    else
-        return QStringList();
-
-	QString fileName = IniPath+comboBox->currentText ();
-
-	QFile file(fileName);
-    if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-        QMessageBox::warning(this,"快捷键没有配置文件","快捷键"+shortcutName+"没有配置文件");
-        return QStringList();
-    }
-
-	QTextStream in(&file);
-    QStringList list;
-	while(!in.atEnd())
-	{
-        list<<in.readLine();
-	}
-    return list;
-}
 //将table或其他ini 中的 命令 转换成 QStringList
 void Widget::createCMDLines(bool isIni, QString shortcutName)
 {
 	cmdLines.clear ();
 	if(isIni)
 	{
-		int row = modelCmd->rowCount();
-		for(int i=0;i<row;i++)
-		{
-			QModelIndex index = modelCmd->index(i);
-			QString dd = modelCmd->data (index,Qt::EditRole).toString ();
-			cmdLines.append (dd);
-		}
+        cmdLines = modelCmd->stringList();
 	}
 	else
 	{
-		cmdLines = getCmdByShortCut (shortcutName);
+        QComboBox *comboBox;
+        if(shortcutName==ShortCut_F8)
+            comboBox = ui->comboBoxF8;
+        else if(shortcutName==ShortCut_F9)
+            comboBox = ui->comboBoxF9;
+        else if(shortcutName==ShortCut_F10)
+            comboBox = ui->comboBoxF10;
+        else if(shortcutName==ShortCut_F11)
+            comboBox = ui->comboBoxF11;
+        else
+            return;
+
+        QString fileName = IniPath+comboBox->currentText ();
+
+        QFile file(fileName);
+        if(!file.open(QIODevice::ReadOnly | QIODevice::Text)){
+            QMessageBox::warning(this,"快捷键没有配置文件","快捷键"+shortcutName+"没有配置文件");
+            return;
+        }
+
+        QTextStream in(&file);
+        while(!in.atEnd())
+        {
+            cmdLines<<in.readLine();
+        }
 	}
 	m_thread->m_lines = cmdLines;
 }
@@ -791,6 +779,7 @@ void ProcessThread::processCMD(QStringList list)
             keybd_event(rr.at(i).unicode(),0,0,0);
             keybd_event(rr.at(i).unicode(),0,KEYEVENTF_KEYUP,0);
         }
+        emit(currentProcessCmd(QString("逐字发送%1").arg(rr)));
     }
 	else if(list.at (0)==EQUAL_TEXT)// E#1#123#
 	{
@@ -802,6 +791,7 @@ void ProcessThread::processCMD(QStringList list)
 			list.removeFirst ();list.removeFirst ();list.removeFirst ();
 			processCMD(list);
 		}
+        emit(currentProcessCmd(QString("逐字发送%1").arg(s1)));
 	}
     else if(list.at(0)==ArrowTab)
     {
@@ -811,29 +801,39 @@ void ProcessThread::processCMD(QStringList list)
         while(!data->isNull())
         {
             QChar c = *data/*->toUpper()*/;
-            if(c==QChar('L'))
-                m_sendKeyMouse->sendKey (Qt::Key_Left);
+            if(c==QChar('L')){
+                //m_sendKeyMouse->sendKey (Qt::Key_Left);
+                keybd_event( VK_LEFT, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_LEFT, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+
+                emit(currentProcessCmd(QString("方向键：左")));
+            }
             else if(c==QChar('R')){
                 //m_sendKeyMouse->sendKey (Qt::Key_Right);
                 keybd_event( VK_RIGHT, 0,KEYEVENTF_EXTENDEDKEY,0 );
                 keybd_event( VK_RIGHT, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("方向键：右")));
             }
             else if(c==QChar('U')){
                 //m_sendKeyMouse->sendKey (Qt::Key_Up);
                 keybd_event( VK_UP, 0,KEYEVENTF_EXTENDEDKEY,0 );
                 keybd_event( VK_UP, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("方向键：上")));
             }
             else if(c==QChar('D')){
                 //m_sendKeyMouse->sendKey (Qt::Key_Down);
                 keybd_event( VK_DOWN, 0,KEYEVENTF_EXTENDEDKEY,0 );
                 keybd_event( VK_DOWN, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("方向键：下")));
             }
             else if(c==QChar('T')){
                 m_sendKeyMouse->sendKey (Qt::Key_Tab);
+                emit(currentProcessCmd(QString("Tab")));
             }
             else if(c==QChar('B'))//shift_tab
             {
                 m_sendKeyMouse->sendKey (Qt::Key_Shift,Qt::Key_Tab);
+                emit(currentProcessCmd(QString("shift+tab")));
             }
             else if(c==QChar('Z'))//alt tab
             {
@@ -843,20 +843,23 @@ void ProcessThread::processCMD(QStringList list)
                 keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY,0 );
                 keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
                 keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("alt+tab")));
             }
-            else if(c==QChar('F'))//
+            else if(c==QChar('F'))//ctrl+c
             {
                 keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY,0 );
                 keybd_event( 'C', 0,0,0 );
                 keybd_event( 'C', 0,0|KEYEVENTF_KEYUP,0 );
                 keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("ctrl+c")));
             }
-            else if(c==QChar('V'))
+            else if(c==QChar('V'))//ctrl+v
             {
                 keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY,0 );
                 keybd_event( 'V', 0,0,0 );
                 keybd_event( 'V', 0,0|KEYEVENTF_KEYUP,0 );
                 keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("ctrl+v")));
             }/*
             else if(c==QChar('X'))//shift up
             {
@@ -870,12 +873,14 @@ void ProcessThread::processCMD(QStringList list)
             {
                 //m_sendKeyMouse->sendKeyUp(Qt::Key_Shift);
                 keybd_event( VK_SHIFT, 0,KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("按下shift")));
 
             }
             else if(c==QChar('s'))//shift down
             {
                 //m_sendKeyMouse->sendKeyDown(Qt::Key_Shift);
                 keybd_event( VK_SHIFT, 0,0,0 );
+                emit(currentProcessCmd(QString("松开shift")));
             }
             ++data;
         }
@@ -1010,9 +1015,9 @@ void Widget::on_pushButtonShowHelp_clicked()
     int width = this->width();
     int helpWidth = ui->plainTextEdit->width()+6;
     ui->plainTextEdit->setHidden(!ui->plainTextEdit->isHidden());
-    this->resize(
-                ui->plainTextEdit->isHidden()?width-helpWidth:width+helpWidth,
-                this->height());
+    int width2= ui->plainTextEdit->isHidden()?width-helpWidth:width+helpWidth;
+    this->setMinimumWidth(ui->plainTextEdit->isHidden()?width-helpWidth:width+helpWidth);
+    this->resize(width2,this->height());
 }
 //根据选框 显示或隐藏 状态窗口
 void Widget::on_checkBoxStateWidget_clicked(bool checked)

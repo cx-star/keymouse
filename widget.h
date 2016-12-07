@@ -111,19 +111,13 @@ private:
 	Ui::Widget *ui;
 
     QClipboard *m_clipboard;
-    QString thisClipboardText;
-	ProcessThread* m_thread;
     SendKeyMouse *sendKeyMouse;
 
 	QStringListModel *modelCmd;
-
     void insertCmdModelData(const QString &s);
 
-	QStringList cmdLines;
-    QStringList getCmdByShortCut(const QString& shortcutName);
+    QStringList cmdLines;
 	void createCMDLines(bool isIni,QString shortcutName);
-
-	int totalSteps,currentStep;
 
     QString IniPath;
     void readIniToView(const QString& m_fileName);
@@ -132,6 +126,9 @@ private:
     void doCmd(bool isIni, const QString& shortcutName=QString());
     bool oneStepIsEnd;
     QString currentStepName;
+    int totalSteps,currentStep;
+    QString thisClipboardText;
+    ProcessThread* m_thread;
 
     FloatWidget *mouseFloat;
     StateWidget *stateWidget;
