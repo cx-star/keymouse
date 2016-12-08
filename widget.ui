@@ -861,11 +861,12 @@ d#行号#分隔符#index
 E#X#Y#Z#注释
 　（自定义文本X行等于Y则执行Z）
 A#方向字母#注释
-　（L左R右U上D下;T=Tab;
-    B=ShiftTab;Z=AltTab;
+　（L左R右U上D下;
+    T=Tab;B=ShiftTab;
+    Z=AltTab;z=CtrlTab;
     S=ShiftUp;s=ShiftDown;
     F=Ctrl+C;V=Ctrl+V;
-    后面加n为自定义行)
+    后面加n从自定义行取值为遍数)
 T#延时时间#注释
 P#自定义行号#n#（自定义增加n)
 Q#自定义行号#n#（自定义减少n)</string>
