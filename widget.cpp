@@ -845,6 +845,16 @@ void ProcessThread::processCMD(QStringList list)
                 keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
                 emit(currentProcessCmd(QString("alt+tab")));
             }
+            else if(c==QChar('z'))//ctrl tab
+            {
+                qDebug()<<"alt tab";
+                //m_sendKeyMouse->sendKey(Qt::Key_Alt,Qt::Key_Tab);
+                keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY,0 );
+                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                emit(currentProcessCmd(QString("alt+tab")));
+            }
             else if(c==QChar('F'))//ctrl+c
             {
                 keybd_event( VK_CONTROL, 0,KEYEVENTF_EXTENDEDKEY,0 );
