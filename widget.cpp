@@ -830,6 +830,10 @@ void ProcessThread::processCMD(QStringList list)
                 m_sendKeyMouse->sendKey (Qt::Key_Tab);
                 emit(currentProcessCmd(QString("Tab")));
             }
+            else if(c==QChar('K')){
+                m_sendKeyMouse->sendKey (Qt::Key_Space);
+                emit(currentProcessCmd(QString("Space")));
+            }
             else if(c==QChar('B'))//shift_tab
             {
                 m_sendKeyMouse->sendKey (Qt::Key_Shift,Qt::Key_Tab);
