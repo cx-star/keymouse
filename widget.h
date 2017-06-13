@@ -35,6 +35,7 @@ protected:
 signals:
     void setClip(const QString& s);
     void currentProcessCmd(const QString& s);
+    void OneCmdEnd();
 private:
     QString encodeArrowNum(const QString& s);
     int findNotNum(const QString& s, int start);

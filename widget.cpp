@@ -122,6 +122,7 @@ Widget::Widget(QWidget *parent) :
 	m_thread = new ProcessThread();
 	connect(m_thread,SIGNAL(setClip(QString)),this,SLOT(setClip(QString)));
     connect(m_thread,SIGNAL(currentProcessCmd(QString)),this,SLOT(currentProcessCmd(QString)));
+    connect(m_thread,SIGNAL(OneCmdEnd()),this,SLOT(checkBox_timer()));//进程结束后开启定时器
     m_thread->m_table = ui->tableWidgetDiy;
     sendKeyMouse = new SendKeyMouse();
     m_thread->m_sendKeyMouse = sendKeyMouse;
@@ -360,7 +361,7 @@ void Widget::doCmd(bool isIni, const QString &shortcutName)//isIni shortcutName 
 		{
             if(m_thread->isRunning())
                 return;
-            createCMDLines(isIni,shortcutName);//cmdLines赋值
+            createCMDLines(isIni,shortcutName);//cmdLines赋值，根据isIni判断从 快捷键 还是 model
             totalSteps = cmdLines.size();
             if(totalSteps==0)
             {
@@ -374,7 +375,7 @@ void Widget::doCmd(bool isIni, const QString &shortcutName)//isIni shortcutName 
         ui->labelState->setText (QString("%4%1%2/%3").arg ("单步:").arg (currentStep).arg (totalSteps).arg(shortcutName));
         oneStepIsEnd = currentStep==totalSteps;//单步执行完毕
     }
-    else//非单步执行
+    else//非单步执行，一次性执行完
     {
 		if(m_thread->isRunning())//批处理操作未结束,按键速度过快
         {
@@ -597,7 +598,7 @@ void Widget::checkBox_timer()
 {
     if(ui->checkBoxTimer->isChecked ())//定时选框 选中
 	{
-		m_StepTimer->start (ui->spinBoxTimer->value ());
+        m_StepTimer->start (ui->spinBoxTimer->value ());
 	}
 	else
 	{
@@ -610,6 +611,7 @@ void Widget::stepTimer_timerout()
     //没有勾选”单步“则什么都不做
 	if(!ui->checkBoxOneStep->isChecked ())
 		return;
+    m_StepTimer->stop();//停止定时器，进程结束后开启
 	//进程执行一圈后，会退出，不能在此作为判断依据
 //	if(!m_thread->isRunning ())
 //		return;
@@ -624,6 +626,7 @@ void Widget::setCheckBoxTimer()
 }
 
 //将table或其他ini 中的 命令 转换成 QStringList
+//根据isIni判断 命令行是 从文件 还是 当前活动列表
 void Widget::createCMDLines(bool isIni, QString shortcutName)
 {
 	cmdLines.clear ();
@@ -935,7 +938,8 @@ void ProcessThread::run()//进程只执行一圈
         sem_OneStep.acquire(1);
 		processCMD(s);
 		this->msleep (100);
-	}
+        emit this->OneCmdEnd();
+    }
 }
 
 void Widget::on_checkBoxAutoMouse_clicked(bool checked)
