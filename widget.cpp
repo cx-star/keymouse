@@ -792,9 +792,10 @@ void ProcessThread::processCMD(QStringList list)
 		if(s1 == list.at (2))
 		{
 			list.removeFirst ();list.removeFirst ();list.removeFirst ();
-			processCMD(list);
-		}
-        emit(currentProcessCmd(QString("逐字发送%1").arg(s1)));
+            emit(currentProcessCmd(QString("新命令%1").arg(list.join("#"))));
+            processCMD(list);
+        }else
+            emit(currentProcessCmd(QString("匹配失败%1,%2").arg(s1).arg(list.at (2))));
 	}
     else if(list.at(0)==ArrowTab)
     {
