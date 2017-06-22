@@ -833,9 +833,14 @@ void ProcessThread::processCMD(QStringList list)
                 m_sendKeyMouse->sendKey (Qt::Key_Tab);
                 emit(currentProcessCmd(QString("Tab")));
             }
+
             else if(c==QChar('K')){
                 m_sendKeyMouse->sendKey (Qt::Key_Space);
                 emit(currentProcessCmd(QString("Space")));
+            }
+            else if(c==QChar('H')){
+                m_sendKeyMouse->sendKey (Qt::Key_Enter);
+                emit(currentProcessCmd(QString("ENTER")));
             }
             else if(c==QChar('B'))//shift_tab
             {
@@ -846,10 +851,10 @@ void ProcessThread::processCMD(QStringList list)
             {
                 qDebug()<<"alt tab";
                 //m_sendKeyMouse->sendKey(Qt::Key_Alt,Qt::Key_Tab);
-                keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY,0 );
-                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY,0 );
-                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
-                keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );
+                keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY,0 );this->msleep(20);
+                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY,0 );this->msleep(20);
+                keybd_event( VK_TAB, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );this->msleep(20);
+                keybd_event( VK_MENU, 0,KEYEVENTF_EXTENDEDKEY|KEYEVENTF_KEYUP,0 );this->msleep(20);
                 emit(currentProcessCmd(QString("alt+tab")));
             }
             else if(c==QChar('z'))//ctrl tab
