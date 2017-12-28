@@ -1,5 +1,4 @@
-
-// Qt 升级到5.x版本后
+﻿// Qt 升级到5.x版本后
 // QAbstractEventDispatcher 中函数发生变动
 // 导致libqxt库中的qxtGlobalShortcut挂掉
 // 参考qxtGlobalShortcut写了一个全局热键类

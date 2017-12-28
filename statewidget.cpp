@@ -1,4 +1,4 @@
-#include <QFont>
+﻿#include <QFont>
 #include <QFontDialog>
 #include <QSettings>
 #include <QCoreApplication>

@@ -1,4 +1,4 @@
-#ifndef HOOKFUNCTION_H
+﻿#ifndef HOOKFUNCTION_H
 #define HOOKFUNCTION_H
 
 #include <QObject>
@@ -19,7 +19,7 @@ private:
      HookFunction();
      static HookFunction* instance;
 signals:
-     mouseAction(const QPoint& point,MouseActionType);
+     void mouseAction(const QPoint& point,MouseActionType);
 };
 
 #endif // HOOKFUNCTION_H

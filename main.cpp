@@ -1,7 +1,8 @@
-#include "widget.h"
+﻿#include "widget.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QDebug>
+
 
 int main(int argc, char *argv[])
 {

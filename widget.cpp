@@ -61,6 +61,7 @@ Widget::Widget(QWidget *parent) :
 {
 	ui->setupUi(this);
     this->setWindowTitle("星辰自动鼠标键盘");
+
     //this->setAttribute( Qt::WA_DeleteOnClose);
 
     m_clipboard = QApplication::clipboard();

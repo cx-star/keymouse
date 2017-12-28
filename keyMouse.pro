@@ -4,15 +4,16 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
-
+QT += core gui
 CONFIG += thread
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = keyMouse
 TEMPLATE = app
 DESTDIR = ../keyMouse/bin
+
+CONFIG += c++11
+PRECOMPILED_HEADER += utf8.h
 
 SOURCES += main.cpp\
         widget.cpp \
@@ -35,6 +36,8 @@ HEADERS  += widget.h \
 
 FORMS    += widget.ui \
     statesettingdialog.ui
+#
+LIBS += -lUser32
 
 OTHER_FILES +=
 
